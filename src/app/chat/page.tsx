@@ -14,6 +14,7 @@ import { INITIAL_MESSAGE, DEFAULT_QUICK_REPLIES } from "@/data/systemPrompt";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
+import { getBaseUrl } from "@/lib/baseUrl";
 import { Loader2 } from "lucide-react";
 
 interface Product {
@@ -126,7 +127,7 @@ export default function ChatPage() {
     setMessages(newMessages);
 
     try {
-      const res = await fetch("/api/chat", {
+      const res = await fetch(`${getBaseUrl()}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -221,7 +222,7 @@ export default function ChatPage() {
     if (parsed.products && parsed.products.length > 0) {
       try {
         const query = parsed.products[0].query;
-        const res = await fetch(`/api/products?q=${encodeURIComponent(query)}`);
+        const res = await fetch(`${getBaseUrl()}/api/products?q=${encodeURIComponent(query)}`);
         if (res.ok) {
           const products = await res.json();
           if (products.length > 0) newEnrichments.products = products;
@@ -231,7 +232,7 @@ export default function ChatPage() {
 
     if (parsed.cropDetail) {
       try {
-        const res = await fetch(`/api/crops?id=${encodeURIComponent(parsed.cropDetail[0].crop)}`);
+        const res = await fetch(`${getBaseUrl()}/api/crops?id=${encodeURIComponent(parsed.cropDetail[0].crop)}`);
         if (res.ok) {
           const cropData = await res.json();
           if (cropData && !cropData.error) newEnrichments.cropData = cropData;

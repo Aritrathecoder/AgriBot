@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Leaf, Sparkles } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { getBaseUrl } from "@/lib/baseUrl";
 
 export default function GeminiChatWidget() {
   const pathname = usePathname();
@@ -37,19 +38,14 @@ export default function GeminiChatWidget() {
     setIsTyping(true);
 
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyCKSO5Dkd34MUmt1o5huK5kHp8z-GzG02I`, {
+      const response = await fetch(`${getBaseUrl()}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: "You are AgriBot, an AI agricultural assistant for Indian farmers. Keep answers very brief, helpful, and polite. Recommend 'Agribot Organic Neem Cake' or 'Agribot Hybrid Seeds' if they ask about products. Speak concisely in English." }]
-          },
-          contents: [{ parts: [{ text: userMsg }] }]
-        })
+        body: JSON.stringify({ message: userMsg })
       });
 
       const data = await response.json();
-      const botResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "I'm sorry, I couldn't understand that. Could you rephrase?";
+      const botResponse = data.response || data.error || "I'm sorry, I couldn't understand that. Could you rephrase?";
       
       setMessages((prev) => [...prev, { role: "bot", content: botResponse }]);
     } catch (error) {

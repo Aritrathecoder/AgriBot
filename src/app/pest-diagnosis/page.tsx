@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/lib/auth-context";
+import { getBaseUrl } from "@/lib/baseUrl";
 import {
   ArrowLeft,
   Upload,
@@ -126,7 +127,7 @@ export default function PestDiagnosisPage() {
     setResult(null);
 
     try {
-      const response = await fetch("/api/pest-diagnosis", {
+      const response = await fetch(`${getBaseUrl()}/api/pest-diagnosis`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

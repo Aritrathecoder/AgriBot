@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
-const DEFAULT_API_KEY = "AIzaSyCKSO5Dkd34MUmt1o5huK5kHp8z-GzG02I";
 
 export async function POST(req: Request) {
   try {
@@ -14,7 +13,15 @@ export async function POST(req: Request) {
       );
     }
 
-    const apiKey = process.env.GEMINI_API_KEY || DEFAULT_API_KEY;
+    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+
+    if (!apiKey) {
+      console.error("GOOGLE_GENERATIVE_AI_API_KEY is not set");
+      return NextResponse.json(
+        { error: "API key not configured" },
+        { status: 500 }
+      );
+    }
 
     // Clean base64 image data (remove prefixes like data:image/png;base64, if present)
     const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
