@@ -1,14 +1,8 @@
 /**
  * Returns the base URL for internal API calls.
- * - In local dev (localhost), returns '' so relative paths like /api/chat work.
- * - In production (deployed), returns the NEXT_PUBLIC_APP_URL.
+ * Always returns '' so relative paths like /api/chat resolve
+ * correctly on any host (localhost, Vercel, Render, etc.).
  */
 export function getBaseUrl(): string {
-  if (typeof window !== "undefined") {
-    const host = window.location.hostname;
-    if (host === "localhost" || host === "127.0.0.1") {
-      return "";
-    }
-  }
-  return process.env.NEXT_PUBLIC_APP_URL || "";
+  return "";
 }
