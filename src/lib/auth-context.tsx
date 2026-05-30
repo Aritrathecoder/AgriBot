@@ -15,7 +15,7 @@ import {
   signInWithPhoneNumber,
   ConfirmationResult,
 } from "firebase/auth";
-import { auth } from "./firebase";
+import { auth as getAuth } from "./firebase";
 
 interface AuthContextType {
   user: User | null;
@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(getAuth(), (currentUser) => {
       setUser(currentUser);
       setLoading(false);
     });
@@ -45,11 +45,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signInWithEmail = (email: string, password: string) => {
-    return signInWithEmailAndPassword(auth, email, password);
+    return signInWithEmailAndPassword(getAuth(), email, password);
   };
 
   const signUpWithEmail = async (email: string, password: string, name: string) => {
-    const credential = await createUserWithEmailAndPassword(auth, email, password);
+    const credential = await createUserWithEmailAndPassword(getAuth(), email, password);
     if (credential.user) {
       await updateProfile(credential.user, { displayName: name });
       // Force local user object refresh with updated name
@@ -62,25 +62,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const provider = new GoogleAuthProvider();
     // Configure standard settings if needed (e.g. prompt select_account)
     provider.setCustomParameters({ prompt: "select_account" });
-    return signInWithPopup(auth, provider);
+    return signInWithPopup(getAuth(), provider);
   };
 
   const logout = () => {
-    return signOut(auth);
+    return signOut(getAuth());
   };
 
   const resetPassword = (email: string) => {
-    return sendPasswordResetEmail(auth, email);
+    return sendPasswordResetEmail(getAuth(), email);
   };
 
   const setupRecaptcha = (containerId: string) => {
-    return new RecaptchaVerifier(auth, containerId, {
+    return new RecaptchaVerifier(getAuth(), containerId, {
       size: "invisible",
     });
   };
 
   const signInWithPhone = (phoneNumber: string, appVerifier: RecaptchaVerifier) => {
-    return signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+    return signInWithPhoneNumber(getAuth(), phoneNumber, appVerifier);
   };
 
   return (
