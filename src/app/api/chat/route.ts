@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { SYSTEM_PROMPT } from "@/data/systemPrompt";
 
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash";
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash";
 
 export async function POST(req: Request) {
   try {
