@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 import { SYSTEM_PROMPT } from "@/data/systemPrompt";
 
-const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const apiKey = process.env.GROQ_API_KEY;
+    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
     if (!apiKey) {
-      console.error("GROQ_API_KEY is not set");
+      console.error("GOOGLE_GENERATIVE_AI_API_KEY is not set");
       return NextResponse.json(
         { error: "API key not configured" },
         { status: 500 }
@@ -19,26 +19,20 @@ export async function POST(req: Request) {
 
     // --- Widget mode: single `message` string → JSON response ---
     if (body.message && typeof body.message === "string") {
-      const response = await fetch(GROQ_API_URL, {
+      const response = await fetch(`${GEMINI_API_URL}:generateContent?key=${apiKey}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "llama-3.2-11b-vision-preview",
-          messages: [
-            { role: "system", content: SYSTEM_PROMPT },
-            { role: "user", content: body.message }
-          ],
-          temperature: 0.7,
-          max_tokens: 2048,
+          systemInstruction: {
+            parts: [{ text: SYSTEM_PROMPT }]
+          },
+          contents: [{ role: "user", parts: [{ text: body.message }] }]
         })
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Groq Chat API error:", errorText);
+        console.error("Gemini Chat API error:", errorText);
         return NextResponse.json(
           { error: "Failed to get AI response" },
           { status: 502 }
@@ -46,7 +40,7 @@ export async function POST(req: Request) {
       }
 
       const data = await response.json();
-      const botResponse = data.choices?.[0]?.message?.content || "I'm sorry, I couldn't understand that. Could you rephrase?";
+      const botResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "I'm sorry, I couldn't understand that. Could you rephrase?";
       return NextResponse.json({ response: botResponse });
     }
 
@@ -72,70 +66,58 @@ export async function POST(req: Request) {
       systemPrompt += `\n\n## Current Weather\n${JSON.stringify(weatherContext)}`;
     }
 
-    // Convert messages array to Groq (OpenAI-compatible) format
-    const groqMessages: any[] = [
-      { role: "system", content: systemPrompt }
-    ];
-
-    messages.forEach((msg: any) => {
+    // Convert messages array to Gemini format
+    const geminiContents = messages.map((msg: any) => {
       const parts: any[] = [];
 
       // Extract text from message
       const text = msg.content || msg.parts?.find((p: any) => p.type === "text")?.text || "";
-      if (text) {
-        parts.push({ type: "text", text });
-      }
+      if (text) parts.push({ text });
 
       // Extract images from message
       const imagePart = msg.parts?.find((p: any) => p.type === "image");
       if (imagePart?.image) {
-        // Groq / OpenAI expects: data:image/jpeg;base64,...
-        let base64Data = imagePart.image;
-        if (!base64Data.startsWith("data:")) {
-          base64Data = `data:image/jpeg;base64,${base64Data}`;
-        }
+        const base64Data = imagePart.image.replace(/^data:image\/\w+;base64,/, "");
         parts.push({
-          type: "image_url",
-          image_url: {
-            url: base64Data,
+          inline_data: {
+            mime_type: "image/jpeg",
+            data: base64Data,
           },
         });
       }
 
-      groqMessages.push({
-        role: msg.role === "assistant" ? "assistant" : "user",
-        // If it's a simple text message with no images, we can pass string directly, 
-        // but for consistency and vision support, we pass the parts array.
-        content: parts.length > 0 ? parts : " ",
-      });
+      return {
+        role: msg.role === "assistant" ? "model" : "user",
+        parts: parts.length > 0 ? parts : [{ text: " " }],
+      };
     });
 
-    // Call Groq with streaming
-    const response = await fetch(GROQ_API_URL, {
+    // Call Gemini with streaming
+    const response = await fetch(`${GEMINI_API_URL}:streamGenerateContent?alt=sse&key=${apiKey}`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "llama-3.2-11b-vision-preview",
-        messages: groqMessages,
-        temperature: 0.7,
-        max_tokens: 2048,
-        stream: true,
+        systemInstruction: {
+          parts: [{ text: systemPrompt }]
+        },
+        contents: geminiContents,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 2048,
+        },
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Groq Stream API error:", errorText);
+      console.error("Gemini Stream API error:", errorText);
       return NextResponse.json(
         { error: "Failed to get AI response" },
         { status: 502 }
       );
     }
 
-    // Stream SSE from Groq → plain text stream to the client
+    // Stream SSE from Gemini → plain text stream to the client
     const reader = response.body!.getReader();
     const decoder = new TextDecoder();
 
@@ -161,7 +143,7 @@ export async function POST(req: Request) {
                 if (!jsonStr || jsonStr === "[DONE]") continue;
                 try {
                   const parsed = JSON.parse(jsonStr);
-                  const text = parsed.choices?.[0]?.delta?.content;
+                  const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
                   if (text) {
                     controller.enqueue(encoder.encode(text));
                   }
