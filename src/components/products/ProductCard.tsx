@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { Star, ExternalLink } from "lucide-react";
 
 interface ProductCardProps {
+  id: string;
   name: string;
   price: string;
   rating: number;
@@ -14,6 +16,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({
+  id,
   name,
   price,
   rating,
@@ -96,18 +99,15 @@ export default function ProductCard({
       {/* Price and CTA */}
       <div className="p-4 pt-3 flex items-center justify-between">
         <span className="text-lg font-bold text-primary">{price}</span>
-        <a
-          href={affiliateUrl}
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          href={`/store/${id}`}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold
                      bg-accent text-white hover:bg-accent-dark
                      active:scale-95 transition-all duration-200
                      shadow-sm hover:shadow-md"
         >
           Buy Now
-          <ExternalLink size={11} />
-        </a>
+        </Link>
       </div>
     </div>
   );
