@@ -186,7 +186,7 @@ export default function ChatPage() {
       
       setStatus("ready");
     } catch (error: any) {
-      console.error("Chat Error:", error);
+      console.warn("Chat API returned an error:", error.message || error);
       const errorMessage = language === "hi"
         ? `⚠️ त्रुटि: ${error.message || "AI से जवाब नहीं मिल सका। कृपया बाद में पुनः प्रयास करें।"}`
         : `⚠️ Error: ${error.message || "Could not get a response from AI. Please try again later."}`;

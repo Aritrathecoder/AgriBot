@@ -144,7 +144,7 @@ export default function PestDiagnosisPage() {
       setResult(data);
       setActiveTab("report");
     } catch (err: any) {
-      console.error(err);
+      console.warn("Diagnosis Error:", err.message || err);
       setError(err.message || "An unexpected error occurred during diagnosis.");
     } finally {
       setIsDiagnosing(false);
