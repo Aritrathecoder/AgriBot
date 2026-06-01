@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
+const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 export async function POST(req: Request) {
   try {
@@ -13,10 +13,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    const apiKey = process.env.GROQ_API_KEY;
 
     if (!apiKey) {
-      console.error("GOOGLE_GENERATIVE_AI_API_KEY is not set");
+      console.error("GROQ_API_KEY is not set");
       return NextResponse.json(
         { error: "API key not configured" },
         { status: 500 }
@@ -25,6 +25,7 @@ export async function POST(req: Request) {
 
     // Clean base64 image data (remove prefixes like data:image/png;base64, if present)
     const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+    const imageUrl = `data:image/jpeg;base64,${base64Data}`;
 
     const prompt = `You are AgriBot's expert Pest & Disease Diagnosis system. Analyze the provided image of a plant/tree and identify if there is any infection or disease. 
 
@@ -59,39 +60,30 @@ JSON Structure:
   }
 }`;
 
-    const response = await fetch(GEMINI_API_URL, {
+    const response = await fetch(GROQ_API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-goog-api-key": apiKey,
+        "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        contents: [
+        model: "meta-llama/llama-4-scout-17b-16e-instruct",
+        messages: [
           {
             role: "user",
-            parts: [
-              {
-                text: prompt,
-              },
-              {
-                inline_data: {
-                  mime_type: "image/jpeg",
-                  data: base64Data,
-                },
-              },
-            ],
-          },
+            content: [
+              { type: "text", text: prompt },
+              { type: "image_url", image_url: { url: imageUrl } }
+            ]
+          }
         ],
-        generationConfig: {
-          responseMimeType: "application/json",
-          temperature: 0.1,
-        },
+        temperature: 0.1,
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Gemini API error:", errorText);
+      console.error("Groq API error:", errorText);
       
       let friendlyError = "Failed to analyze image. Please try again later.";
       try {
@@ -108,7 +100,7 @@ JSON Structure:
     }
 
     const result = await response.json();
-    const assistantMessage = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+    const assistantMessage = result?.choices?.[0]?.message?.content;
 
     if (!assistantMessage) {
       return NextResponse.json(
@@ -145,4 +137,5 @@ JSON Structure:
     );
   }
 }
+
 
