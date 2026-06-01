@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { SYSTEM_PROMPT } from "@/data/systemPrompt";
 
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash";
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest";
 
 export async function POST(req: Request) {
   try {
@@ -19,9 +19,9 @@ export async function POST(req: Request) {
 
     // --- Widget mode: single `message` string → JSON response ---
     if (body.message && typeof body.message === "string") {
-      const response = await fetch(`${GEMINI_API_URL}:generateContent?key=${apiKey}`, {
+      const response = await fetch(`${GEMINI_API_URL}:generateContent`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-goog-api-key": apiKey },
         body: JSON.stringify({
           systemInstruction: {
             parts: [{ text: SYSTEM_PROMPT }]
@@ -32,9 +32,10 @@ export async function POST(req: Request) {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Gemini Chat API error:", errorText);
+        console.error("Gemini Chat API error (status %d):", response.status, errorText);
+        console.error("API key prefix:", apiKey?.slice(0, 8) + "...");
         return NextResponse.json(
-          { error: "Failed to get AI response" },
+          { error: `Gemini API error (${response.status}): Failed to get AI response. Check your API key and try again.` },
           { status: 502 }
         );
       }
@@ -93,9 +94,9 @@ export async function POST(req: Request) {
     });
 
     // Call Gemini with streaming
-    const response = await fetch(`${GEMINI_API_URL}:streamGenerateContent?alt=sse&key=${apiKey}`, {
+    const response = await fetch(`${GEMINI_API_URL}:streamGenerateContent?alt=sse`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-goog-api-key": apiKey },
       body: JSON.stringify({
         systemInstruction: {
           parts: [{ text: systemPrompt }]
@@ -110,9 +111,10 @@ export async function POST(req: Request) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Gemini Stream API error:", errorText);
+      console.error("Gemini Stream API error (status %d):", response.status, errorText);
+      console.error("API key prefix:", apiKey?.slice(0, 8) + "...");
       return NextResponse.json(
-        { error: "Failed to get AI response" },
+        { error: `Gemini API error (${response.status}): Failed to get AI response. Check your API key and try again.` },
         { status: 502 }
       );
     }

@@ -138,7 +138,14 @@ export default function ChatPage() {
         }),
       });
 
-      if (!res.ok) throw new Error(res.statusText);
+      if (!res.ok) {
+        let errorMsg = res.statusText;
+        try {
+          const errorData = await res.json();
+          errorMsg = errorData.error || errorMsg;
+        } catch {}
+        throw new Error(errorMsg);
+      }
       if (!res.body) throw new Error("No body");
 
       setStatus("streaming");
@@ -178,9 +185,16 @@ export default function ChatPage() {
       }
       
       setStatus("ready");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Chat Error:", error);
-      setStatus("error");
+      const errorMessage = language === "hi"
+        ? `⚠️ त्रुटि: ${error.message || "AI से जवाब नहीं मिल सका। कृपया बाद में पुनः प्रयास करें।"}`
+        : `⚠️ Error: ${error.message || "Could not get a response from AI. Please try again later."}`;
+      setMessages((prev) => [
+        ...prev,
+        { id: (Date.now() + 1).toString(), role: "assistant", content: errorMessage, parts: [{ type: "text", text: errorMessage }] }
+      ]);
+      setStatus("ready");
     }
   };
 

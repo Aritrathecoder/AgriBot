@@ -42,6 +42,12 @@ export default function ProductCard({
     "Eco-Friendly": "bg-emerald-500 text-white",
   };
 
+  // Products from chat carousel (prod-*) should use affiliate URL;
+  // Products from the store (agri-*) should link to the internal store page.
+  const isStoreProduct = id.startsWith("agri-");
+  const buyUrl = isStoreProduct ? `/store/${id}` : affiliateUrl;
+  const isExternal = !isStoreProduct;
+
   return (
     <div
       className="flex-shrink-0 w-[240px] sm:w-[260px] rounded-2xl bg-surface border border-border
@@ -99,15 +105,30 @@ export default function ProductCard({
       {/* Price and CTA */}
       <div className="p-4 pt-3 flex items-center justify-between">
         <span className="text-lg font-bold text-primary">{price}</span>
-        <Link
-          href={`/store/${id}`}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold
-                     bg-accent text-white hover:bg-accent-dark
-                     active:scale-95 transition-all duration-200
-                     shadow-sm hover:shadow-md"
-        >
-          Buy Now
-        </Link>
+        {isExternal ? (
+          <a
+            href={buyUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold
+                       bg-accent text-white hover:bg-accent-dark
+                       active:scale-95 transition-all duration-200
+                       shadow-sm hover:shadow-md"
+          >
+            Buy Now
+            <ExternalLink size={10} />
+          </a>
+        ) : (
+          <Link
+            href={buyUrl}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold
+                       bg-accent text-white hover:bg-accent-dark
+                       active:scale-95 transition-all duration-200
+                       shadow-sm hover:shadow-md"
+          >
+            Buy Now
+          </Link>
+        )}
       </div>
     </div>
   );
