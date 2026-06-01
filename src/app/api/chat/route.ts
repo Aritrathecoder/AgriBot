@@ -1,25 +1,25 @@
 import { NextResponse } from "next/server";
 import { SYSTEM_PROMPT } from "@/data/systemPrompt";
 
-const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const apiKey = process.env.GROQ_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
 
     if (!apiKey) {
-      console.error("GROQ_API_KEY is not set");
+      console.error("OPENAI_API_KEY is not set");
       return NextResponse.json({ error: "API key not configured" }, { status: 500 });
     }
 
     // --- Widget mode: single `message` string → JSON response ---
     if (body.message && typeof body.message === "string") {
-      const response = await fetch(GROQ_API_URL, {
+      const response = await fetch(OPENAI_API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
         body: JSON.stringify({
-          model: "meta-llama/llama-4-scout-17b-16e-instruct",
+          model: "gpt-4o-mini",
           messages: [
             { role: "system", content: SYSTEM_PROMPT },
             { role: "user", content: body.message }
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Groq Chat API error (status %d):", response.status, errorText);
+        console.error("OpenAI Chat API error (status %d):", response.status, errorText);
         
         let friendlyError = "Failed to get AI response. Please try again later.";
         try {
@@ -107,12 +107,12 @@ export async function POST(req: Request) {
       content: systemPrompt
     });
 
-    // Call Groq with streaming
-    const response = await fetch(GROQ_API_URL, {
+    // Call OpenAI with streaming
+    const response = await fetch(OPENAI_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
       body: JSON.stringify({
-        model: "meta-llama/llama-4-scout-17b-16e-instruct",
+        model: "gpt-4o-mini",
         messages: groqMessages,
         temperature: 0.7,
         max_tokens: 2048,
@@ -122,7 +122,7 @@ export async function POST(req: Request) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Groq Stream API error (status %d):", response.status, errorText);
+      console.error("OpenAI Stream API error (status %d):", response.status, errorText);
       
       let friendlyError = "Failed to get AI response. Please try again later.";
       try {
@@ -139,7 +139,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: friendlyError }, { status: 502 });
     }
 
-    // Stream SSE from Groq → plain text stream to the client
+    // Stream SSE from OpenAI → plain text stream to the client
     const reader = response.body!.getReader();
     const decoder = new TextDecoder();
 
