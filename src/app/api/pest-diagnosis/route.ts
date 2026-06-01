@@ -92,8 +92,17 @@ JSON Structure:
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Gemini API error:", errorText);
+      
+      let friendlyError = "Failed to analyze image. Please try again later.";
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.error && errorJson.error.message) {
+          friendlyError = errorJson.error.message;
+        }
+      } catch (e) {}
+
       return NextResponse.json(
-        { error: `Gemini API Error: ${errorText}` },
+        { error: friendlyError },
         { status: 502 }
       );
     }
