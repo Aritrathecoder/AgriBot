@@ -33,9 +33,21 @@ export async function POST(req: Request) {
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Gemini Chat API error (status %d):", response.status, errorText);
-        console.error("API key prefix:", apiKey?.slice(0, 8) + "...");
+        
+        let friendlyError = "Failed to get AI response. Please try again later.";
+        try {
+          const errorJson = JSON.parse(errorText);
+          if (errorJson.error && errorJson.error.message) {
+            friendlyError = errorJson.error.message;
+          }
+        } catch (e) {}
+
+        if (response.status === 401 || response.status === 403) {
+          friendlyError = "Authentication failed. Please check your API key.";
+        }
+
         return NextResponse.json(
-          { error: `Gemini API error (${response.status}): Failed to get AI response. Check your API key and try again.` },
+          { error: friendlyError },
           { status: 502 }
         );
       }
@@ -112,9 +124,21 @@ export async function POST(req: Request) {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Gemini Stream API error (status %d):", response.status, errorText);
-      console.error("API key prefix:", apiKey?.slice(0, 8) + "...");
+      
+      let friendlyError = "Failed to get AI response. Please try again later.";
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.error && errorJson.error.message) {
+          friendlyError = errorJson.error.message;
+        }
+      } catch (e) {}
+
+      if (response.status === 401 || response.status === 403) {
+        friendlyError = "Authentication failed. Please check your API key.";
+      }
+
       return NextResponse.json(
-        { error: `Gemini API error (${response.status}): Failed to get AI response. Check your API key and try again.` },
+        { error: friendlyError },
         { status: 502 }
       );
     }
