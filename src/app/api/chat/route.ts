@@ -19,7 +19,7 @@ export async function POST(req: Request) {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
         body: JSON.stringify({
-          model: "llama-3.2-90b-vision-preview",
+          model: "llama-3.2-11b-vision-preview",
           messages: [
             { role: "system", content: SYSTEM_PROMPT },
             { role: "user", content: body.message }
@@ -112,7 +112,7 @@ export async function POST(req: Request) {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
       body: JSON.stringify({
-        model: "llama-3.2-90b-vision-preview",
+        model: "llama-3.2-11b-vision-preview",
         messages: groqMessages,
         temperature: 0.7,
         max_tokens: 2048,
