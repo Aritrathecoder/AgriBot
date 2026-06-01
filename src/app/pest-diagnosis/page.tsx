@@ -154,9 +154,6 @@ export default function PestDiagnosisPage() {
   // Helper to generate dynamic search URLs
   const getAmazonLink = (query: string) => 
     `https://www.amazon.in/s?k=${encodeURIComponent(query)}`;
-  
-  const getBigHaatLink = (query: string) => 
-    `https://www.bighaat.com/search?q=${encodeURIComponent(query)}`;
 
   const getGoogleLink = (query: string) => 
     `https://www.google.com/search?q=${encodeURIComponent(query + " buy online")}`;
@@ -472,7 +469,7 @@ export default function PestDiagnosisPage() {
                             <h5 className="font-bold text-white text-sm">{item.name}</h5>
                           </div>
 
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                             <a
                               href={getAmazonLink(item.searchQuery)}
                               target="_blank"
@@ -489,15 +486,6 @@ export default function PestDiagnosisPage() {
                               className="py-2 px-1 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-200 font-bold text-[10px] hover:bg-yellow-500/20 flex items-center justify-center gap-1 transition-all text-center cursor-pointer"
                             >
                               Flipkart
-                              <ExternalLink size={10} />
-                            </a>
-                            <a
-                              href={getBigHaatLink(item.searchQuery)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="py-2 px-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-200 font-bold text-[10px] hover:bg-emerald-500/20 flex items-center justify-center gap-1 transition-all text-center cursor-pointer"
-                            >
-                              BigHaat
                               <ExternalLink size={10} />
                             </a>
                             <a
